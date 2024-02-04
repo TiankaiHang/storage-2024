@@ -650,8 +650,9 @@ def convert_ldm_vae_checkpoint(checkpoint, config):
     new_checkpoint["decoder.conv_out.bias"] = vae_state_dict["decoder.conv_out.bias"]
     new_checkpoint["decoder.conv_norm_out.weight"] = vae_state_dict["decoder.norm_out.weight"]
     new_checkpoint["decoder.conv_norm_out.bias"] = vae_state_dict["decoder.norm_out.bias"]
-    new_checkpoint["decoder.time_conv_out.weight"] = vae_state_dict["decoder.time_mix_conv.weight"]
-    new_checkpoint["decoder.time_conv_out.bias"] = vae_state_dict["decoder.time_mix_conv.bias"]
+
+    new_checkpoint["decoder.time_conv_out.weight"] = vae_state_dict["decoder.conv_out.time_mix_conv.weight"]
+    new_checkpoint["decoder.time_conv_out.bias"] = vae_state_dict["decoder.conv_out.time_mix_conv.bias"]
 
     # new_checkpoint["quant_conv.weight"] = vae_state_dict["quant_conv.weight"]
     # new_checkpoint["quant_conv.bias"] = vae_state_dict["quant_conv.bias"]
@@ -757,6 +758,48 @@ def main():
     )
     pipe.unet.load_state_dict(new_unet)
 
+    # ---------------------------------------------------------
+    # vae_config = pipe.vae.config
+    # new_vae = convert_ldm_vae_checkpoint(
+    #     checkpoint=sd,
+    #     config=vae_config,
+    # )
+
+    # sorted_new_vae_keys = sorted(new_vae.keys())
+
+    # new_vae_renamed = {}
+    # for idx, key in enumerate(sorted_new_vae_keys):
+        
+    #     if key.startswith("encoder.mid_block.resnets."):
+    #         new_key = key.replace(".spatial_res_block", "")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     elif "temporal_res_block.spatial_res_block" in key:
+    #         new_key = key.replace("temporal_res_block.spatial_res_block", "temporal_res_block")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     elif key.startswith("encoder.down_blocks."):
+    #         new_key = key.replace(".spatial_res_block", "")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     elif key.startswith("decoder.mid_blocks."):
+    #         new_key = key.replace(".spatial_res_block", "")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     elif key.startswith("decoder.mid_block.") and "time_mixer" in key:
+    #         new_key = key.replace(".spatial_res_block", "")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     elif key.startswith("decoder.up_blocks.") and "time_mixer" in key:
+    #         new_key = key.replace(".spatial_res_block", "")
+    #         new_vae_renamed[new_key] = new_vae[key]
+
+    #     else:
+    #         new_vae_renamed[key] = new_vae[key]
+
+    # m, u = pipe.vae.load_state_dict(new_vae_renamed, strict=False)
+    # ---------------------------------------------------------
+
     # Load the conditioning image
     image = load_image("https://th.bing.com/th/id/R.2bd3c68a957085d3f0f32d46222ac70e?rik=vwhQAvMeyM21RA&pid=ImgRaw&r=0")
     image = image.resize((1024, 576))
@@ -764,7 +807,7 @@ def main():
     generator = torch.manual_seed(42)
     frames = pipe(image, decode_chunk_size=8, generator=generator).frames[0]
 
-    export_to_video(frames, "generated2.mp4", fps=7)
+    export_to_video(frames, "generated3.mp4", fps=7)
 
 
 if __name__ == '__main__':
